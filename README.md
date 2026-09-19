@@ -6,27 +6,33 @@ An autonomous pipeline that discovers underexploited, high-intent search queries
 
 ## 🚀 Status & Roadmap
 
-| Step | Task | Status | Details |
+| Stage | Focus Area | Status | Details |
 | :--- | :--- | :---: | :--- |
-| **1** | Scaffold & Deployment | ✅ Done | Streamlit app deployed on GitHub / Streamlit Community Cloud |
-| **2** | Query Expansion | ✅ Done | 5-stage autonomous expansion (Autocomplete + PAA) yielding 50–150+ queries |
-| **3** | SERP Ad Density Scraper | ⏳ Pending | Live commercial intent filter (paid ad slot counter) |
-| **4** | Google Trends Demand Signal | ⏳ Pending | Relative search volume via `pytrends` (0–100) |
-| **5** | Opportunity Scoring & Ranking | ⏳ Pending | Transparent heuristic ranking formula |
-| **6** | UI Polish & Error Handling | ⏳ Pending | Robust rate-limiting, partial failure handling |
-| **7** | Production Documentation | ⏳ Pending | Full deployment & architecture retrospective |
+| **Infrastructure** | Scaffold & Deployment | ✅ Live | Streamlit app deployed on GitHub / Streamlit Community Cloud |
+| **Expansion** | Query Expansion | ✅ Live | 5-stage autonomous expansion (Autocomplete + PAA) yielding 50–150+ queries |
+| **Commercial Filter** | SERP Ad Density Scraper | ✅ Live | Dual-layer ad slot counter & commercial intent gatekeeper (0–4 ads) |
+| **Demand Signal** | Google Trends Signal | ⏳ Pending | Relative search volume via `pytrends` (0–100) |
+| **Scoring** | Opportunity Ranking Formula | ⏳ Pending | Heuristic score calculation |
+| **Polish** | UI Polish & Error Handling | ⏳ Pending | Robust rate-limiting & partial failure handling |
+| **Documentation** | Production Documentation | ⏳ Pending | Architecture retrospective |
 
 ---
 
-## 🔍 Step 2: Query Expansion Architecture
+## 🔍 Core Architecture
 
-The query expansion engine ([expansion.py](expansion.py)) harvests candidate keywords across 5 distinct channels:
+### 1. Query Expansion Engine (`expansion.py`)
+Harvests long-tail keywords across 5 channels:
+* Direct Google Autocomplete
+* People Also Ask (PAA) question-intent patterns (`"how to choose"`, `"is it worth"`, `"what is the best"`)
+* High-intent commercial modifiers (`"best"`, `"budget"`, `"top rated"`, `"compact"`)
+* Contextual prepositions (`"for"`, `"with"`, `"under"`, `"vs"`)
+* Recursive alphabetical suffix probing
 
-1. **Direct Google Autocomplete:** Base query suggestions directly from Google's completion API.
-2. **People Also Ask (PAA) & Question-Intent:** Questions answering buying intent (`"how to choose"`, `"is it worth buying"`, `"what is the best"`).
-3. **High-Intent Commercial Modifiers:** Buyer keyword patterns (`"best"`, `"budget"`, `"top rated"`, `"compact"`, `"commercial vs home"`).
-4. **Contextual Prepositions:** Long-tail combinations (`"for"`, `"with"`, `"under"`, `"vs"`, `"without"`).
-5. **Alphabet Permutations:** Recursive suffix probing (`"seed a"`, `"seed b"`, ...) until target count is reached.
+### 2. Commercial Intent & SERP Ad Scraper (`serp_ad_scraper.py`)
+Acts as the commercial gatekeeper:
+* **Intent Gatekeeper:** Queries with **0 paid ad slots** are identified as purely informational/educational and disqualified from the opportunity pool.
+* **Blue Ocean Detection:** Queries with **1–2 ad slots** are prioritized as uncontested commercial opportunities.
+* **Dual-Layer Architecture:** Combines live SERP ad container scraping (`data-text-ad`, `class="uEierd"`, `aria-label="Sponsored"`) with a semantic auction proxy classifier to gracefully handle search engine bot-blocking and rate limits without failing.
 
 ---
 
